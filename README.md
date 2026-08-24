@@ -123,7 +123,7 @@ DECRBY contador 3
 SET saldo:1 100 EX 60
 SETEX saldo:1 60 100
 ```
-`SET ... EX segundos` crea la clave con expiración en un solo comando. `SETEX clave segundos valor` hace lo mismo con otro orden de argumentos (primero segundos, después valor — error común invertirlo).
+`SET ... EX segundos` crea la clave con expiración en un solo comando. `SETEX clave segundos valor` hace lo mismo con otro orden de argumentos: primero segundos, después valor (es un error común invertirlo).
 
 ```bash
 APPEND log "primera línea\n"
@@ -168,7 +168,7 @@ SISMEMBER tags "redis"
 SREM tags "cache"
 SCARD tags
 ```
-`SADD` agrega elementos (ignora los duplicados en silencio). `SISMEMBER` responde `1`/`0` en O(1) — mucho más eficiente que traer todo con `SMEMBERS` y buscar en código; es el uso más común (¿este usuario ya votó?). `SCARD` cuenta elementos sin traer el contenido.
+`SADD` agrega elementos (ignora los duplicados en silencio). `SISMEMBER` responde `1`/`0` en O(1), mucho más eficiente que traer todo con `SMEMBERS` y buscar en código. Es el uso más común (¿este usuario ya votó?). `SCARD` cuenta elementos sin traer el contenido.
 
 ```bash
 SADD equipoA "ana" "luis"
@@ -183,7 +183,7 @@ SDIFF equipoA equipoB
 
 ## Hashes
 
-Un hash agrupa varios campos bajo una misma clave — la forma natural de guardar "un registro" sin serializar todo a JSON.
+Un hash agrupa varios campos bajo una misma clave: es la forma natural de guardar "un registro" sin serializar todo a JSON.
 
 ```bash
 HSET usuario:1 nombre "Ana" edad 29 ciudad "Madrid"
@@ -191,7 +191,7 @@ HGET usuario:1 nombre
 HGETALL usuario:1
 HINCRBY usuario:1 edad 1
 ```
-`HSET` puede setear varios campos en un comando. `HGET` trae un campo puntual (más eficiente que traer todo). `HGETALL` trae todos los campos — cuidado con hashes muy grandes. `HINCRBY` incrementa un campo numérico de forma atómica.
+`HSET` puede setear varios campos en un comando. `HGET` trae un campo puntual (más eficiente que traer todo). `HGETALL` trae todos los campos (cuidado con hashes muy grandes). `HINCRBY` incrementa un campo numérico de forma atómica.
 
 ```bash
 HDEL usuario:1 ciudad
@@ -214,7 +214,7 @@ ZADD puntuaciones 1200 "ana" 980 "luis" 1500 "marta"
 ZRANGE puntuaciones 0 -1 WITHSCORES
 ZREVRANGE puntuaciones 0 2 WITHSCORES
 ```
-`ZADD` agrega o actualiza miembros con su score. `ZRANGE` devuelve de menor a mayor (`WITHSCORES` incluye el puntaje). `ZREVRANGE` de mayor a menor — el orden típico de un ranking.
+`ZADD` agrega o actualiza miembros con su score. `ZRANGE` devuelve de menor a mayor (`WITHSCORES` incluye el puntaje). `ZREVRANGE` de mayor a menor, el orden típico de un ranking.
 
 ```bash
 ZSCORE puntuaciones "ana"
@@ -223,12 +223,12 @@ ZINCRBY puntuaciones 50 "ana"
 ZCARD puntuaciones
 ZREM puntuaciones "luis"
 ```
-`ZSCORE` da el puntaje de un miembro. `ZRANK` da su posición en orden ascendente (`ZREVRANK` en descendente). `ZINCRBY` suma puntos de forma atómica — el comando típico para actualizar un puntaje sin leer-calcular-escribir. `ZCARD` cuenta, `ZREM` elimina.
+`ZSCORE` da el puntaje de un miembro. `ZRANK` da su posición en orden ascendente (`ZREVRANK` en descendente). `ZINCRBY` suma puntos de forma atómica: es el comando típico para actualizar un puntaje sin leer-calcular-escribir. `ZCARD` cuenta, `ZREM` elimina.
 
 ```bash
 ZRANGEBYSCORE puntuaciones 1000 2000
 ```
-Trae los miembros cuyo score cae en un rango — útil cuando importa el valor del score, no la posición.
+Trae los miembros cuyo score cae en un rango, útil cuando importa el valor del score y no la posición.
 
 ---
 
@@ -351,7 +351,7 @@ else
 end
 " 1 saldo:1 20
 ```
-Descuenta saldo solo si alcanza, todo en una operación atómica — evita el problema de "leer, decidir, escribir" en varios viajes de red donde otro cliente podría meterse en el medio. `ARGV[1]` es el primer argumento no-clave (`20`).
+Descuenta saldo solo si alcanza, todo en una operación atómica, evitando el problema de "leer, decidir, escribir" en varios viajes de red donde otro cliente podría meterse en el medio. `ARGV[1]` es el primer argumento no-clave (`20`).
 
 ```bash
 SCRIPT LOAD "return redis.call('GET', KEYS[1])"
@@ -370,7 +370,7 @@ CLUSTER INFO
 CLUSTER NODES
 CLUSTER KEYSLOT saldo:1
 ```
-`CLUSTER INFO` muestra el estado general (`ok` o degradado). `CLUSTER NODES` lista los nodos y qué slots maneja cada uno. `CLUSTER KEYSLOT` dice a qué slot/nodo pertenece una clave — útil para debuggear.
+`CLUSTER INFO` muestra el estado general (`ok` o degradado). `CLUSTER NODES` lista los nodos y qué slots maneja cada uno. `CLUSTER KEYSLOT` dice a qué slot/nodo pertenece una clave, útil para debuggear.
 
 > Comandos que tocan varias claves a la vez (`MGET a b`) solo funcionan en cluster si todas caen en el **mismo slot**. Se fuerza con "hash tags": `{usuario:1}:nombre` y `{usuario:1}:edad` van al mismo slot porque Redis solo hashea la parte entre `{}`.
 
@@ -398,7 +398,7 @@ Antes de elegir cluster, réplicas o una instancia sola, conviene responder: ¿l
   ```bash
   SLOWLOG GET 10
   ```
-  Muestra los últimos comandos que superaron el umbral de latencia configurado — el primer lugar donde mirar si Redis "se puso lento".
+  Muestra los últimos comandos que superaron el umbral de latencia configurado: es el primer lugar donde mirar si Redis "se puso lento".
 - **Separar caché, sesiones, colas y métricas**, aunque compartan servidor, con prefijos de clave distintos.
 
 Regla general: guardá en Redis lo que necesites leer o actualizar con mucha frecuencia y se beneficie de una estructura simple y rápida. Si el dato es grande, se consulta poco o necesita queries complejas (joins, filtros arbitrarios), probablemente pertenece a una base relacional.
@@ -439,4 +439,4 @@ ZRANGE ranking 0 9 WITHSCORES
 INCR ratelimit:usuario42
 EXPIRE ratelimit:usuario42 60
 ```
-Cada request incrementa el contador; el primer `INCR` también crea la clave, a la que se le pone `EXPIRE 60`. Si supera el límite permitido antes de que pasen los 60 segundos, la aplicación rechaza la request — la base de casi cualquier rate limiter por ventana fija.
+Cada request incrementa el contador; el primer `INCR` también crea la clave, a la que se le pone `EXPIRE 60`. Si supera el límite permitido antes de que pasen los 60 segundos, la aplicación rechaza la request. Es la base de casi cualquier rate limiter por ventana fija.
